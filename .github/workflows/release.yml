@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-tags: true
 
       - name: Checkout KernelPatch
         uses: actions/checkout@v4
@@ -29,5 +31,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: splfix_$(git describe --tags | sed 's/v//').kpm
+          files: splfix_*.kpm
           generate_release_notes: true
