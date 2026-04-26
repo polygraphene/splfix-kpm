@@ -15,8 +15,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout KernelPatch
+        uses: actions/checkout@v4
+        with:
+          repository: bmax121/KernelPatch
+          ref: 0.13.1
+          path: KernelPatch
+
       - name: Build
-        run: make ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+        run: make ANDROID_NDK=$ANDROID_NDK_LATEST_HOME KP_DIR=KernelPatch
       
       - name: Release
         uses: softprops/action-gh-release@v2
