@@ -29,6 +29,9 @@ Just embed this kpm on your kernel.
 For KernelSU (and forks) or Magisk user:
 Use [KPatch-Next-Module](https://github.com/KernelSU-Next/KPatch-Next-Module).
 
+# Note
+The decryption key of `/data` is bound to SPL. If you boot the device with newer (spoofed) SPL once, you cannot decrypt `/data` with older SPL and you must wipe data from recovery. Be careful of uninstalling this module.
+
 # License
 GPL-2.0
 
