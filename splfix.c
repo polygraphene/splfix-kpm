@@ -32,9 +32,8 @@ struct file* (*do_filp_open)(int dfd, struct filename* pathname, const struct op
 ssize_t (*vfs_read)(struct file *, char __user *, size_t, loff_t *);
 int (*filp_close)(struct file *filp, fl_owner_t id);
 
-unsigned long kfunc_def(_copy_from_user)(void *, const void __user *, unsigned long);
-unsigned long kfunc_def(_copy_to_user)(void __user *to, const void *from, unsigned long n);
-struct file *kfunc_def(filp_open)(const char *filename, int flags, umode_t mode);
+unsigned long kfunc_def(__arch_copy_from_user)(void *, const void __user *, unsigned long);
+unsigned long kfunc_def(__arch_copy_to_user)(void __user *to, const void *from, unsigned long n);
 void *kfunc_def(__kmalloc)(size_t size, gfp_t flags);
 void kfunc_def(kfree)(const void *objp);
 
@@ -118,7 +117,7 @@ static void vfs_read_after(hook_fargs4_t* args, void* udata) {
             return;
         }
         memset(buf, 0, len);
-        long ret = kf__copy_from_user(buf, ptr, len);
+        long ret = kf___arch_copy_from_user(buf, ptr, len);
         if (ret != 0) {
             pr_info(TAG "_copy_from_user: failed: %ld\n", ret);
             kf_kfree(buf);
@@ -136,7 +135,7 @@ static void vfs_read_after(hook_fargs4_t* args, void* udata) {
                 pr_info(TAG "Error: Value length is not the same length as replace value.\n");
                 return;
             }
-            ret = kf__copy_to_user(ptr + (value - buf), replace, strlen(replace));
+            ret = kf___arch_copy_to_user(ptr + (value - buf), replace, strlen(replace));
             pr_info(TAG "Replaced: %ld\n", ret);
         }
         kf_kfree(buf);
@@ -144,11 +143,19 @@ static void vfs_read_after(hook_fargs4_t* args, void* udata) {
 }
 
 static long fixspl_init(const char* args, const char* event, void* __user reserved) {
-  kfunc_lookup_name(filp_open);
-  kfunc_lookup_name(_copy_from_user);
+  pr_info(TAG "init\n");
+  kfunc_lookup_name(__arch_copy_from_user);
+  kfunc_lookup_name(__arch_copy_to_user);
   kfunc_lookup_name(__kmalloc);
   kfunc_lookup_name(kfree);
-  kfunc_lookup_name(_copy_to_user);
+  pr_info(TAG "__arch_copy_from_user:%p\n", kf___arch_copy_from_user);
+  pr_info(TAG "__arch_copy_to_user:%p\n", kf___arch_copy_to_user);
+  pr_info(TAG "kmalloc:%p\n", kf___kmalloc);
+  pr_info(TAG "kfree:%p\n", kf_kfree);
+  if (kf___arch_copy_to_user == NULL || kf___arch_copy_from_user == NULL || kf___kmalloc == NULL || kf_kfree == NULL) {
+      pr_err(TAG "Failed to get func addresses.\n");
+      return -ENOENT;
+  }
 
   lookup_name(do_filp_open);
   lookup_name(filp_close);
