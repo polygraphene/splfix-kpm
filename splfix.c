@@ -162,6 +162,7 @@ static long fixspl_init(const char* args, const char* event, void* __user reserv
 
 static long fixspl_exit(void* __user reserved) {
   unhook_func(do_filp_open);
+  unhook_func(filp_close);
   unhook_func(vfs_read);
   return 0;
 }
